@@ -1,0 +1,15 @@
+{
+  "name": "silojs",
+  "version": "1.0.0",
+  "description": "Port of frankandoak/silo to js",
+  "main": "main.js",
+  "dependencies": {
+    "jest": "^22.4.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "David Moreau",
+  "license": "MIT"
+}

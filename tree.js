@@ -1,10 +1,44 @@
-const {Batch, Location, Operation} = require('./models')
+const {Batch, BatchSet, Location, Operation} = require('./models')
 const LocationMap = Map
 
 module.exports = class LocationTree {
   constructor () {
     this.locations = new LocationMap()
     this.childrenMap = new LocationMap()
+  }
+
+  bfsMap (fn, startLocation) {
+    const m = this.childrenMap
+    const ok = new Set()
+
+    const recurse = (fn, loc) => {
+      if (m.has(loc)) {
+        if (!ok.has(loc)) {
+          fn(this.locations.get(loc))
+        }
+        const next = []
+        m.get(loc).forEach(child => {
+          if (!ok.has(child)) {
+            fn(this.locations.get(child))
+            next.push(child)
+            ok.add(child)
+          }
+        })
+
+        next.forEach(recurse.bind(null, fn))
+      }
+    }
+
+    recurse(fn, startLocation.name)
+  }
+
+  reduce (startLocation) {
+    const result = new BatchSet()
+    this.bfsMap(loc => {
+      result.add(loc.batches)
+    }, startLocation)
+
+    return result
   }
 
   /**

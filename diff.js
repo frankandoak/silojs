@@ -18,4 +18,8 @@ tree.exec(new Operation(null, A, [C]))
 tree.exec(new Operation(B, C, [new Batch('shirt', 2)]))
 tree.exec(new Operation(A, C, [new Batch('pants', 2)]))
 
-console.log(tree)
+console.log(tree, '###########')
+
+tree.bfsMap(console.log, A)
+
+console.log(tree.reduce(A).toJson())
