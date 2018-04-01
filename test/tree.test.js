@@ -1,53 +1,36 @@
-const Tree = require('../tree')
-const {Batch, Location, Operation} = require('../models')
+const Tree = require('../src/tree')
 
-const A = new Location('A')
-const B = new Location('B')
+const A = {name: 'A'}
+const B = {name: 'B'}
+const C = {name: 'C'}
 
-test('can move a Location inside a Tree', () => {
+test('can link and unlink', () => {
   const tree = new Tree()
-  tree.ensure(A)
-  tree.ensure(B)
-  tree.exec(new Operation(null, A, [B]))
+  tree.link(A, B)
 
-  expect(tree.childrenMap.get('A')).toContain('B')
+  expect(tree.from(A).has(B)).toBeTruthy()
+  expect(tree.from(A).size).toEqual(1)
+  expect(tree.to(B).has(A)).toBeTruthy()
+  expect(tree.to(B).size).toEqual(1)
+
+  tree.unlink(A, B)
+
+  expect(tree.from(A).has(B)).toBeFalsy()
+  expect(tree.from(A).size).toEqual(0)
+  expect(tree.to(B).has(A)).toBeFalsy()
+  expect(tree.to(B).size).toEqual(0)
 })
 
-test('can move a Batch inside a Tree', () => {
+test('can bfsMap a Tree', () => {
   const tree = new Tree()
-  tree.ensure(A)
-  tree.ensure(B)
-  tree.exec(new Operation(A, B, [new Batch('shirt', 2)]))
+  tree.link(A, B)
+  tree.link(A, C)
 
-  expect(A.batches.get('shirt')).toBe(-2)
-  expect(B.batches.get('shirt')).toBe(2)
+  const found = new Set()
+  tree.bfsMap(f => found.add(f), A)
+
+  expect(found.has(A)).toBeTruthy()
+  expect(found.has(B)).toBeTruthy()
+  expect(found.has(C)).toBeTruthy()
+  expect(found.size).toEqual(3)
 })
-
-test('can reduce a Tree', () => {
-  const tree = new Tree()
-  tree.ensure(A)
-  tree.ensure(B)
-  tree.exec(new Operation(null, A, [B]))
-  tree.exec(new Operation(A, B, [new Batch('shirt', 2)]))
-
-  expect(tree.reduce(A).get('shirt')).toBe(0)
-})
-
-// test('can merge two Trees', () => {
-//   const B = new Location('B')
-//   const C = new Location('C')
-//   const tree = new Tree()
-
-//   tree.exec(new Operation(null, A, [B]))
-//   tree.exec(new Operation(null, A, [C]))
-//   tree.exec(new Operation(B, C, [new Batch('shirt', 2)]))
-//   tree.exec(new Operation(A, C, [new Batch('pants', 2)]))
-
-//   const tree2 = new Tree()
-
-//   // revert ops from tree in fact
-//   tree.exec(new Operation(C, B, [new Batch('shirt', 2)]))
-//   tree.exec(new Operation(C, A, [new Batch('pants', 2)]))
-
-//   tree.merge(tree2)
-// })

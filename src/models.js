@@ -1,3 +1,12 @@
+class Entity {
+  constructor (params, def) {
+    this.params = params
+    this.def = def
+  }
+
+  // clean Refs
+}
+
 class Batch {
   constructor (product, quantity = 0) {
     this.product = product
@@ -33,22 +42,32 @@ class BatchSet extends Map {
   }
 }
 
-class Location {
-  constructor (name, batches) {
-    this.name = name
+class Location extends Entity {
+  constructor (params) {
+    super(params, {
+      identity: 'location_id'
+    })
     this.batches = new BatchSet()
   }
-
   add (batch) {
     this.batches.add(batch)
   }
 }
 
-class Operation {
-  constructor (from, to, what) {
-    this.from = from
-    this.to = to
-    this.what = what
+class Operation extends Entity {
+  constructor (params) {
+    super(params, {
+      identity: 'operation_id',
+      relations: ['source', 'target', 'location']
+    })
+  }
+}
+
+class Product extends Entity {
+  constructor (params) {
+    super(params, {
+      identity: 'product_id'
+    })
   }
 }
 
@@ -56,5 +75,6 @@ module.exports = {
   Batch,
   BatchSet,
   Location,
-  Operation
+  Operation,
+  Product
 }
