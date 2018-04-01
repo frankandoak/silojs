@@ -31,10 +31,6 @@ class BatchSet extends Map {
         throw new Error('oops')
     }
   }
-
-  toJson () {
-    return JSON.stringify([...this])
-  }
 }
 
 class Location {

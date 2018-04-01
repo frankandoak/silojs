@@ -41,6 +41,11 @@ module.exports = class LocationTree {
     return result
   }
 
+  merge (tree) {
+    // merge batches first
+    // move children where they belong
+  }
+
   /**
    * @param {Operation} op
    */

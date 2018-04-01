@@ -32,3 +32,22 @@ test('can reduce a Tree', () => {
 
   expect(tree.reduce(A).get('shirt')).toBe(0)
 })
+
+// test('can merge two Trees', () => {
+//   const B = new Location('B')
+//   const C = new Location('C')
+//   const tree = new Tree()
+
+//   tree.exec(new Operation(null, A, [B]))
+//   tree.exec(new Operation(null, A, [C]))
+//   tree.exec(new Operation(B, C, [new Batch('shirt', 2)]))
+//   tree.exec(new Operation(A, C, [new Batch('pants', 2)]))
+
+//   const tree2 = new Tree()
+
+//   // revert ops from tree in fact
+//   tree.exec(new Operation(C, B, [new Batch('shirt', 2)]))
+//   tree.exec(new Operation(C, A, [new Batch('pants', 2)]))
+
+//   tree.merge(tree2)
+// })

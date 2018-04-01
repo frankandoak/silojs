@@ -5,21 +5,46 @@ soit j'update l'arbre, soit j'update le contenu des noeuds
 si je supprime/créer des locations, que se pass-t-il ?
 */
 
-const Tree = require('./tree')
-const {Batch, Location, Operation} = require('./models')
+// const Tree = require('./tree')
+// const {Batch, Location, Operation} = require('./models')
 
-const A = new Location('A')
-const B = new Location('B')
-const C = new Location('C')
-const tree = new Tree()
+const mysql = require('mysql')
+var connection = mysql.createConnection({
+  host: '127.0.0.1',
+  user: 'root',
+  database: 'projectx'
+})
+connection.connect()
 
-tree.exec(new Operation(null, A, [B]))
-tree.exec(new Operation(null, A, [C]))
-tree.exec(new Operation(B, C, [new Batch('shirt', 2)]))
-tree.exec(new Operation(A, C, [new Batch('pants', 2)]))
+const stream = require('stream')
 
-console.log(tree, '###########')
+const sql = {
+  sql: `
+SELECT *
+FROM silo_operation o
+LEFT JOIN silo_location slf ON slf.location_id = o.source
+LEFT JOIN silo_location slt ON slt.location_id = o.target
+LEFT JOIN silo_batch b USING (operation_id)
+WHERE done_at IS NOT NULL
+AND o.location IS NULL
+ORDER BY operation_id DESC LIMIT 1
+`,
+  nestTables: true
+}
 
-tree.bfsMap(console.log, A)
+const treeWriter = new stream.Writable({
+  write: function (chunk, encoding, next) {
+    // sets this._write under the hood
+    console.log(chunk)
 
-console.log(tree.reduce(A).toJson())
+    // An optional error can be passed as the first argument
+    next()
+  },
+  objectMode: true
+})
+
+connection.query(sql)
+  .stream({highWaterMark: 5})
+  .pipe(treeWriter)
+
+connection.end()
