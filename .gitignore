@@ -1,1 +1,6 @@
 node_modules
+tmp
+.vscode
+README.md
+package.json
+package-lock.json
