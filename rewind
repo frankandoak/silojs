@@ -7,7 +7,7 @@ const cli = meow(`
       $ ./rewind <locationCode> <untilOperation>
 
       locationCode   Code of the Location to use as root
-      untilOperation An Operation id or a datetime string
+      untilOperation An Operation id or a datetime string to replay to, INCLUDED
 
     Options
       --dsn          (TODO) Database Source Name
