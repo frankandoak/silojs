@@ -16,6 +16,8 @@
   "author": "David Moreau",
   "license": "MIT",
   "standard": {
-    "env": [ "jest" ]
+    "env": [
+      "jest"
+    ]
   }
 }

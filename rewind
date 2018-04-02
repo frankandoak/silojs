@@ -10,19 +10,23 @@ const cli = meow(`
       untilOperation An Operation id or a datetime string to replay to, INCLUDED
 
     Options
-      --dsn          (TODO) Database Source Name
+      --dsn          Database Source Name
       --notype       Comma separated list of Operation types to exclude
 
     Examples
       $ ./rewind TOST 248628
       TOST,121171-4CY-31X32,4
 
-      $ ./rewind TOST 248628 --exclude-type "retail sale"
+      $ ./rewind TOST 248628 --exclude-type "retail sale" --dsn mysql://root@127.0.0.1:3306/projectx
       TOST,121171-4CY-31X32,5
 `, {
   flags: {
     notype: {
       type: 'string'
+    },
+    dsn: {
+      type: 'string',
+      default: 'mysql://root@127.0.0.1:3306/projectx'
     }
   }
 })
@@ -31,7 +35,7 @@ if (cli.input.length !== 2) {
   cli.showHelp(1)
 }
 
-const connection = require('./src/connection')
+const connection = require('./src/connection')(cli.flags.dsn)
 
 let main = async () => {
   // Find the starting node

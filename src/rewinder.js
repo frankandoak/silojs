@@ -99,9 +99,10 @@ module.exports = class Rewinder {
           let newInv = await this.rewind(whatId, newSet)
           // Replay the ops on newInv !!!
           inv.weld(newInv, whatId, targetId)
-        } else {
-          l(`${id} nop`)
         }
+        // else {
+        //   l(`${id} nop`)
+        // }
       }
     }
   }
