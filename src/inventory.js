@@ -1,27 +1,48 @@
-const {Batch, Location, Operation, Product} = require('./models')
-const EntityStore = require('./es')
+const {Location} = require('./models')
+const Store = require('./store')
 const Tree = require('./tree')
 
 module.exports = class Inventory {
   constructor () {
-    this.es = new EntityStore()
+    // Inventory holds two informations together
+    // - the EntityStore, which is reponsible for holding and mapping the Locations
+    //   to their location_id
+    // - the Tree, which holds all the parent-child relationships, by manipulating
+    //   solely location_id references (@todo not sure location_id is necessary)
+    this.locations = new Store(null, 'location_id')
     this.tree = new Tree()
   }
 
-  // auto register the parent if any
+  /**
+   * Register the location, and place it in the tree if a parent is known
+   * @param {Location} location
+   */
   add (location) {
-    this.es.store(location)
-    this.tree.link(location.params.parent, location.params.location_id)
+    this.locations.store(location)
+    if (location.parent) {
+      this.tree.link(location.parent, location.location_id)
+    }
   }
 
-  get (id) {
-    return this.es.retrieve(Location, id)
+  has (id) {
+    return this.locations.has(id)
+  }
+
+  /**
+   * @param {int} id of the Location to retrieve
+   * @returns {Location}
+   */
+  retrieve (id) {
+    return this.locations.retrieve(id)
+  }
+
+  keys () {
+    return Array.from(this.locations.keys())
   }
 
   getByCode (code) {
-    let store = this.es._store(Location)
-    for (let value of store.values()) {
-      if (value.params.code === code) {
+    for (let value of this.locations.values()) {
+      if (value.code === code) {
         return value
       }
     }
@@ -29,16 +50,16 @@ module.exports = class Inventory {
   }
 
   addBatch (location, batch) {
-    const loc = this.es.retrieve(Location, location.params.location_id)
+    const loc = this.locations.retrieve(location.location_id)
     loc.add(batch)
   }
 
   toCsv () {
-    for (let location of this.es._store(Location).values()) {
+    for (let location of this.locations.values()) {
       for (let [product, quantity] of location.batches) {
         if (quantity !== 0 && quantity !== null) {
           let dataStr = [
-            location.params.code,
+            location.code,
             product,
             quantity
           ].join(',')

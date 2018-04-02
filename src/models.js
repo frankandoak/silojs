@@ -1,7 +1,14 @@
 class Entity {
   constructor (params, def) {
-    this.params = params
-    this.def = def
+    this._params = params
+    this._def = def
+
+    // Assign params to object
+    const forbidden = ['_params', '_def']
+    for (let key in params) {
+      if (key in forbidden) throw new Error(`Forbidden params ${key} on Entity`)
+      this[key] = params[key]
+    }
   }
 
   // clean Refs
@@ -40,6 +47,27 @@ class BatchSet extends Map {
         throw new Error('oops')
     }
   }
+  remove (batch) {
+    switch (true) {
+      case (batch instanceof Batch):
+        if (batch.quantity !== 0) {
+          const sku = batch.product
+          if (this.has(sku)) {
+            this.set(sku, this.get(sku) - batch.quantity)
+          } else {
+            this.set(sku, -batch.quantity)
+          }
+        }
+        break
+      case (batch instanceof BatchSet):
+        batch.forEach((v, k) => {
+          this.remove(new Batch(k, v))
+        })
+        break
+      default:
+        throw new Error('oops')
+    }
+  }
 }
 
 class Location extends Entity {
@@ -47,27 +75,26 @@ class Location extends Entity {
     super(params, {
       identity: 'location_id'
     })
-    this.batches = new BatchSet()
-  }
-  add (batch) {
-    this.batches.add(batch)
+    if (!this.batches) {
+      this.batches = new BatchSet()
+    }
   }
 }
 
 class Operation extends Entity {
   constructor (params) {
     super(params, {
-      identity: 'operation_id',
-      relations: ['source', 'target', 'location']
+      identity: 'operation_id'
     })
+    if (!this.batches) {
+      this.batches = new BatchSet()
+    }
   }
-}
-
-class Product extends Entity {
-  constructor (params) {
-    super(params, {
-      identity: 'product_id'
-    })
+  opposite () {
+    let params = Object.assign({}, this._params)
+    params.source = this._params.target
+    params.target = this._params.source
+    return new Operation(params)
   }
 }
 
@@ -75,6 +102,5 @@ module.exports = {
   Batch,
   BatchSet,
   Location,
-  Operation,
-  Product
+  Operation
 }

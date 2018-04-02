@@ -14,5 +14,8 @@
     "test": "jest"
   },
   "author": "David Moreau",
-  "license": "MIT"
+  "license": "MIT",
+  "standard": {
+    "env": [ "jest" ]
+  }
 }

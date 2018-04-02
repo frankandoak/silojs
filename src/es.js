@@ -5,11 +5,11 @@ module.exports = class EntityStore {
 
   store (model) {
     let store = this._store(model)
-    let id = model.def.identity
+    let id = model._def.identity
     if (!id) { throw new Error('definition should hold identity field') }
-    if (model.params[id] && !store.has(model.params[id])) {
+    if (model[id] && !store.has(model[id])) {
       // Insert only new
-      store.set(model.params[id], model)
+      store.set(model[id], model)
     }
   }
 

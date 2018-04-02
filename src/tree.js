@@ -21,6 +21,8 @@ module.exports = class Tree {
     if (e.has(to)) {
       e.delete(to)
       if (!e.size) this.edgeMaps.delete(from)
+    } else {
+      throw new Error('already removed')
     }
     return this
   }
