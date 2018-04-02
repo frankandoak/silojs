@@ -4,8 +4,9 @@ module.exports = class Rewinder {
   /**
    * @param {async} subtreeLoader
    */
-  constructor (subtreeLoader) {
+  constructor (subtreeLoader, excludeTypes = []) {
     this.subtreeLoader = subtreeLoader
+    this.excludeTypes = excludeTypes
     this.stack = 0
   }
 
@@ -22,9 +23,16 @@ module.exports = class Rewinder {
 
     for (let op of operationSet) {
       if (op.location) {
+        if (this.excludeTypes.includes(op.type)) {
+          throw new Error(`St:${this.stack} Operation:${op.operation_id} cannot be skipped for type ${op.type}`)
+        }
         await this._moveLocation(inv, op, operationSetCopy)
       } else {
-        this._moveBatch(inv, op)
+        if (!this.excludeTypes.includes(op.type)) {
+          this._moveBatch(inv, op)
+        } else {
+          l(`St:${this.stack} Operation:${op.operation_id} skip because of type ${op.type}`)
+        }
       }
     }
 

@@ -9,9 +9,9 @@ const location = (id, code, parent, batches) => {
   return new Location(params)
 }
 let operationId = 30
-const operation = (from, to, what) => {
+const operation = (from, to, what, type = null) => {
   // operationId-- cause we fetch them reverse chronologically
-  let params = {operation_id: operationId--, source: from, target: to, location: null}
+  let params = {operation_id: operationId--, source: from, target: to, location: null, type}
   if (Array.isArray(what)) params.batches = new BatchSet(what)
   else params.location = what
   return new Operation(params)
@@ -136,4 +136,21 @@ test('can move a Location from outside with old operations bis', async () => {
   expect(inv.keys()).not.toContain(5)
   expect(inv.tree.from(3)).not.toContain(4)
   expect(inv.tree.from(2)).toContain(4)
+})
+
+test('can exclude a Batch Operation by type', async () => {
+  dut = new Rewinder(subtreeLoader, ['bomb'])
+  let inv = await dut.rewind(1, new Set([
+    operation(2, 3, [['shirt', 1]], 'bomb') // move a shirt from 2 to 3
+  ]))
+
+  expect(inv.locations.get(2).batches.get('shirt')).toBe(2)
+  expect(inv.locations.get(3).batches.get('shirt')).toBeFalsy()
+})
+
+test('cannot exclude a Location move by type', async () => {
+  dut = new Rewinder(subtreeLoader, ['bomb'])
+  expect(dut.rewind(1, new Set([
+    operation(1, 3, 2, 'bomb') // move 2 to be a child of 3
+  ]))).rejects.toThrowError()
 })

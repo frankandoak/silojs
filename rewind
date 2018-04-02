@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+const Loaders = require('./src/loaders')
+const Rewinder = require('./src/rewinder')
+const meow = require('meow')
+const cli = meow(`
+    Usage
+      $ ./rewind <locationCode> <untilOperation>
+
+      locationCode   Code of the Location to use as root
+      untilOperation An Operation id or a datetime string
+
+    Options
+      --dsn          (TODO) Database Source Name
+      --notype       Comma separated list of Operation types to exclude
+
+    Examples
+      $ ./rewind TOST 248628
+      TOST,121171-4CY-31X32,4
+
+      $ ./rewind TOST 248628 --exclude-type "retail sale"
+      TOST,121171-4CY-31X32,5
+`, {
+  flags: {
+    notype: {
+      type: 'string'
+    }
+  }
+})
+
+if (cli.input.length !== 2) {
+  cli.showHelp(1)
+}
+
+const connection = require('./src/connection')
+
+let main = async () => {
+  // Find the starting node
+  const startId = await Loaders.loadLocationCode(connection, cli.input[0])
+  if (!startId) {
+    throw Error(`Cannot find starting Location:${cli.input[0]}`)
+  }
+
+  // Load operations to be replayed
+  console.log(`Loading until ${cli.input[1]}...`)
+  const operations = await Loaders.loadOperationsUntil(connection, cli.input[1])
+  console.log(`Loaded ${operations.size} operations`)
+
+  // Create a Rewinder
+  let exclude = []
+  if (cli.flags.notype) {
+    exclude = cli.flags.notype.split(',')
+  }
+
+  const rewinder = new Rewinder(
+    Loaders.loadSubtree.bind(Loaders, connection),
+    exclude
+  )
+  const inv = await rewinder.rewind(startId, operations)
+
+  console.log(`Done`)
+  console.log(inv.toCsv())
+  connection.end()
+}
+
+main()

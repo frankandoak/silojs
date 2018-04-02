@@ -104,6 +104,10 @@ const loadLocationCode = async (connection, code) => {
  * @param {string} until
  */
 const loadOperationsUntil = async (connection, until) => {
+  let condition = 'AND op.done_at >= ?'
+  if (!isNaN(until)) {
+    condition = 'AND op.operation_id >= ?'
+  }
   const sql = {
     sql: `
   SELECT op.*, sp.*, b.*, sot.*
@@ -112,7 +116,7 @@ const loadOperationsUntil = async (connection, until) => {
   LEFT JOIN silo_product sp USING (product_id)
   LEFT JOIN silo_operation_type sot ON op.type = sot.operation_type_id
   WHERE done_at IS NOT NULL
-  AND op.done_at >= ?
+  ${condition}
   ORDER BY done_at DESC
   `,
     values: [until],
