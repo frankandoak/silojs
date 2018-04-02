@@ -17,13 +17,14 @@ module.exports = class Rewinder {
     l(`St:${this.stack} with ${operationSet.size} Ops`)
     let inv = this.subtreeLoader(id)
 
-    operationSet.forEach(op => {
+    for (let op of operationSet) {
       if (op.location) {
         this._moveLocation(inv, op, operationSetCopy)
       } else {
         this._moveBatch(inv, op)
       }
-    })
+    }
+
     this.stack = prevStack
     return inv
   }
@@ -75,11 +76,13 @@ module.exports = class Rewinder {
           // - Weld the subtree inventory to the current inventory
           // You'll notice that this step makes rewind recursive...
           let newSet = new Set()
-          opSet.forEach(newOp => {
+          for (let newOp of opSet) {
+            // Current op is taken care of lower, no need to forward it
+            // Is this our recursion stopper ?
             if (newOp.operation_id > op.operation_id) {
               newSet.add(newOp)
             }
-          })
+          }
 
           l(`${id} loads subtree for ${whatId}`)
           let newInv = this.rewind(whatId, newSet)

@@ -29,9 +29,9 @@ module.exports = class Tree extends Map {
 
   to (to) {
     const linked = new Set()
-    this.forEach(function (value, key) {
+    for (let [key, value] of this) {
       if (value.has(to)) linked.add(key)
-    })
+    }
     return linked
   }
 

@@ -39,9 +39,9 @@ class BatchSet extends Map {
         }
         break
       case (batch instanceof BatchSet):
-        batch.forEach((v, k) => {
+        for (let [k, v] of batch) {
           this.add(new Batch(k, v))
-        })
+        }
         break
       default:
         throw new Error('oops')
@@ -60,9 +60,9 @@ class BatchSet extends Map {
         }
         break
       case (batch instanceof BatchSet):
-        batch.forEach((v, k) => {
+        for (let [k, v] of batch) {
           this.remove(new Batch(k, v))
-        })
+        }
         break
       default:
         throw new Error('oops')

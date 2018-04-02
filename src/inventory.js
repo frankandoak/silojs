@@ -77,10 +77,10 @@ module.exports = class Inventory {
     this.tree.bfsMap(id => {
       idToRemove.push(id)
     }, whatId)
-    idToRemove.forEach(id => {
+    for (let id of idToRemove) {
       this.locations.delete(id)
       this.tree.delete(id)
-    })
+    }
   }
 
   toCsv () {
