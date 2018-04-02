@@ -54,6 +54,17 @@ module.exports = class Inventory {
     loc.add(batch)
   }
 
+  weld (inv, root, target) {
+    for (let [k, v] of inv.locations) {
+      // todo collision detection
+      this.locations.set(k, v)
+    }
+    for (let [k, v] of inv.tree) {
+      this.tree.set(k, v)
+    }
+    this.tree.link(target, root)
+  }
+
   toCsv () {
     for (let location of this.locations.values()) {
       for (let [product, quantity] of location.batches) {

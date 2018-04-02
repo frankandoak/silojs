@@ -2,11 +2,7 @@
  * Implement a directed Tree
  * @see https://github.com/timoxley/graphs for inspiration
  */
-module.exports = class Tree {
-  constructor () {
-    this.edgeMaps = new Map()
-  }
-
+module.exports = class Tree extends Map {
   // Do not duplicate links
   link (from, to) {
     const e = this._edgeMap(from)
@@ -20,7 +16,7 @@ module.exports = class Tree {
     const e = this._edgeMap(from)
     if (e.has(to)) {
       e.delete(to)
-      if (!e.size) this.edgeMaps.delete(from)
+      if (!e.size) this.delete(from)
     } else {
       throw new Error('already removed')
     }
@@ -33,23 +29,23 @@ module.exports = class Tree {
 
   to (to) {
     const linked = new Set()
-    this.edgeMaps.forEach(function (value, key) {
+    this.forEach(function (value, key) {
       if (value.has(to)) linked.add(key)
     })
     return linked
   }
 
   _edgeMap (from) {
-    let edgeMap = this.edgeMaps.get(from)
+    let edgeMap = this.get(from)
     if (!edgeMap) {
       edgeMap = new Set()
-      this.edgeMaps.set(from, edgeMap)
+      this.set(from, edgeMap)
     }
     return edgeMap
   }
 
   bfsMap (fn, node) {
-    const m = this.edgeMaps
+    const m = this
     const ok = new Set()
 
     const recurse = (fn, n) => {

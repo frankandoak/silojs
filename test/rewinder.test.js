@@ -8,9 +8,10 @@ const location = (id, code, parent, batches) => {
   if (batches) params.batches = new BatchSet(batches)
   return new Location(params)
 }
-let operationId = 1
+let operationId = 20
 const operation = (from, to, what) => {
-  let params = {operation_id: operationId++, source: from, target: to, location: null}
+  // operationId-- cause we fetch them reverse chronologically
+  let params = {operation_id: operationId--, source: from, target: to, location: null}
   if (Array.isArray(what)) params.batches = new BatchSet(what)
   else params.location = what
   return new Operation(params)
@@ -103,4 +104,28 @@ test('can move a Location from outside', () => {
   expect(inv.keys()).toContain(4)
   expect(inv.keys()).toContain(5)
   expect(inv.tree.from(3)).toContain(4)
+})
+
+test('can move a Location from outside with old operations', () => {
+  let inv = dut.rewind(1, new Set([
+    operation(4, null, 5),
+    operation(null, 3, 4) // move 4 to be a child of 3
+  ]))
+
+  expect(inv.keys()).toContain(4)
+  expect(inv.keys()).not.toContain(5)
+  expect(inv.tree.from(3)).toContain(4)
+})
+
+test('can move a Location from outside with old operations bis', () => {
+  let inv = dut.rewind(1, new Set([
+    operation(4, null, 5),
+    operation(null, 3, 4), // move 4 to be a child of 3
+    operation(3, 2, 4) // nove 4 to be a child of 2
+  ]))
+
+  expect(inv.keys()).toContain(4)
+  expect(inv.keys()).not.toContain(5)
+  expect(inv.tree.from(3)).not.toContain(4)
+  expect(inv.tree.from(2)).toContain(4)
 })
