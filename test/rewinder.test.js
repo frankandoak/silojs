@@ -40,8 +40,8 @@ beforeEach(() => {
   dut = new Rewinder(subtreeLoader)
 })
 
-test('can remove a Location', () => {
-  let inv = dut.rewind(1, new Set([
+test('can remove a Location', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(1, null, 2) // remove 2 forever
   ]))
 
@@ -49,8 +49,8 @@ test('can remove a Location', () => {
   expect(inv.keys()).not.toContain(2)
 })
 
-test('can move a Location out of subtree', () => {
-  let inv = dut.rewind(1, new Set([
+test('can move a Location out of subtree', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(1, 4, 2) // move 2 to an unknown Location
   ]))
 
@@ -58,8 +58,8 @@ test('can move a Location out of subtree', () => {
   expect(inv.keys()).not.toContain(2)
 })
 
-test('can move a Location', () => {
-  let inv = dut.rewind(1, new Set([
+test('can move a Location', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(1, 3, 2) // move 2 to be a child of 3
   ]))
 
@@ -68,8 +68,8 @@ test('can move a Location', () => {
   expect(inv.tree.from(3)).toContain(2)
 })
 
-test('can remove a Location along with its subtree', () => {
-  let inv = dut.rewind(1, new Set([
+test('can remove a Location along with its subtree', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(1, 3, 2),
     operation(1, null, 3) // remove 3 forever
   ]))
@@ -79,27 +79,24 @@ test('can remove a Location along with its subtree', () => {
   expect(inv.keys()).not.toContain(3)
 })
 
-test('can remove a Batch', () => {
-  const dut = new Rewinder(subtreeLoader)
-  let inv = dut.rewind(1, new Set([
+test('can remove a Batch', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(2, null, [['shirt', 1]]) // remove a shirt from 2
   ]))
 
   expect(inv.locations.get(2).batches.get('shirt')).toBe(1)
 })
 
-test('can move a Batch out of subtree', () => {
-  const dut = new Rewinder(subtreeLoader)
-  let inv = dut.rewind(1, new Set([
+test('can move a Batch out of subtree', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(2, 4, [['shirt', 1]]) // move a shirt from 2 to an unknown Location
   ]))
 
   expect(inv.locations.get(2).batches.get('shirt')).toBe(1)
 })
 
-test('can move a Batch', () => {
-  const dut = new Rewinder(subtreeLoader)
-  let inv = dut.rewind(1, new Set([
+test('can move a Batch', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(2, 3, [['shirt', 1]]) // move a shirt from 2 to 3
   ]))
 
@@ -107,8 +104,8 @@ test('can move a Batch', () => {
   expect(inv.locations.get(3).batches.get('shirt')).toBe(1)
 })
 
-test('can move a Location from outside', () => {
-  let inv = dut.rewind(1, new Set([
+test('can move a Location from outside', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(null, 3, 4) // move 4 to be a child of 3
   ]))
 
@@ -117,8 +114,8 @@ test('can move a Location from outside', () => {
   expect(inv.tree.from(3)).toContain(4)
 })
 
-test('can move a Location from outside with old operations', () => {
-  let inv = dut.rewind(1, new Set([
+test('can move a Location from outside with old operations', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(4, null, 5),
     operation(null, 3, 4) // move 4 to be a child of 3
   ]))
@@ -128,8 +125,8 @@ test('can move a Location from outside with old operations', () => {
   expect(inv.tree.from(3)).toContain(4)
 })
 
-test('can move a Location from outside with old operations bis', () => {
-  let inv = dut.rewind(1, new Set([
+test('can move a Location from outside with old operations bis', async () => {
+  let inv = await dut.rewind(1, new Set([
     operation(4, null, 5),
     operation(null, 3, 4), // move 4 to be a child of 3
     operation(3, 2, 4) // nove 4 to be a child of 2

@@ -1,6 +1,9 @@
 const l = require('debug')('rewinder')
 
 module.exports = class Rewinder {
+  /**
+   * @param {async} subtreeLoader
+   */
   constructor (subtreeLoader) {
     this.subtreeLoader = subtreeLoader
     this.stack = 0
@@ -10,16 +13,16 @@ module.exports = class Rewinder {
    * @param {string} id Location to be considered root of the rewindable tree
    * @param {Set} operationSet Operation to replay, in order
    */
-  rewind (id, operationSet) {
+  async rewind (id, operationSet) {
     let prevStack = this.stack
     let operationSetCopy = new Set(operationSet)
     this.stack = id
     l(`St:${this.stack} with ${operationSet.size} Ops`)
-    let inv = this.subtreeLoader(id)
+    let inv = await this.subtreeLoader(id)
 
     for (let op of operationSet) {
       if (op.location) {
-        this._moveLocation(inv, op, operationSetCopy)
+        await this._moveLocation(inv, op, operationSetCopy)
       } else {
         this._moveBatch(inv, op)
       }
@@ -33,7 +36,7 @@ module.exports = class Rewinder {
    * @param {Inventory} inv
    * @param {Operation} op
    */
-  _moveLocation (inv, op, opSet) {
+  async _moveLocation (inv, op, opSet) {
     const sourceId = op.source
     const targetId = op.target
     const whatId = op.location
@@ -85,7 +88,7 @@ module.exports = class Rewinder {
           }
 
           l(`${id} loads subtree for ${whatId}`)
-          let newInv = this.rewind(whatId, newSet)
+          let newInv = await this.rewind(whatId, newSet)
           // Replay the ops on newInv !!!
           inv.weld(newInv, whatId, targetId)
         } else {
