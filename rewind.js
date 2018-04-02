@@ -1,10 +1,5 @@
-/*
-Rewinding Operations on a Silo Inventory subtree involves the following steps:
-- Rebuild the current tree structure
-- Replay operations until it reaches the selected date. We only take into account
-the operations that changes the tree or its node content.
-There's however some caveats when you play only with subtrees... TBC
-*/
+const Loaders = require('./src/loaders')
+const Rewinder = require('./src/rewinder')
 const meow = require('meow')
 const cli = meow(`
     Usage
@@ -20,42 +15,30 @@ const cli = meow(`
     Examples
       $ node rewind.js MTLST
       ...
-`, {
-  flags: {
-    rainbow: {
-      type: 'boolean',
-      alias: 'r'
-    }
-  }
-})
+`)
 
-if (cli.input.length < 1) {
+if (cli.input.length !== 2) {
   cli.showHelp(1)
 }
 
-const mysql = require('mysql')
-const {loadLocation, loadChildOf, loadOperationsUntil, loadLocationCode} = require('./src/loaders')
-const startLocationCode = cli.input[0]
-const until = cli.input[1]
-const Inventory = require('./src/inventory')
-const inv = new Inventory()
+const connection = require('./src/connection')
 
-const connection = mysql.createConnection({
-  host: '127.0.0.1',
-  user: 'root',
-  database: 'projectx'
-})
-connection.connect()
-//
-;(async () => {
+let main = async () => {
+  // Find the starting node
+  const startId = await Loaders.loadLocationCode(connection, cli.input[0])
+  if (!startId) {
+    throw Error(`Cannot find starting Location:${cli.input[0]}`)
+  }
+
   // Load operations to be replayed
-  // Init a rewinder with the subtreeloader
-  // Make it rewind the operation..., calling the subtree loader when needed
-  // let arf = await loadOperationsUntil(connection, until)
-  let arf = await loadLocationCode(connection, startLocationCode)
-  console.log(arf)
-  // log(inv)
+  const operations = await Loaders.loadOperationsUntil(connection, cli.input[1])
+  console.log(`Loaded ${operations.size} operations`)
+
+  const rewinder = new Rewinder(Loaders.loadSubtree.bind(Loaders, connection))
+  const inv = await rewinder.rewind(startId, operations)
+
   inv.toCsv()
   connection.end()
 }
-)()
+
+main()

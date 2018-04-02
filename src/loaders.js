@@ -1,4 +1,76 @@
 const {Batch, Operation, Location} = require('./models')
+const Inventory = require('./inventory')
+
+/**
+ * list all childs of a given location
+ * @param {array} ids
+ */
+const loadChildOf = async (connection, ids) => {
+  if (!Array.isArray(ids) || ids.length < 1) { throw new Error('please search a bunch') }
+  const sql = {
+    sql: `
+  SELECT location_id
+  FROM silo_location
+  WHERE parent IN (?)
+  `,
+    values: [ids]
+  }
+
+  let results = await new Promise((resolve, reject) => {
+    connection.query(sql, (error, results, fields) => {
+      if (error) reject(error)
+      else resolve(results)
+    })
+  })
+
+  const childs = []
+  for (let result of results) {
+    if (result.location_id) {
+      childs.push(result.location_id)
+    }
+  }
+
+  return childs.filter(a => !!a)
+}
+
+/**
+ *
+ * @param {*} connection
+ * @param {*} id
+ * @returns {Location}
+ */
+const loadLocation = async (connection, id) => {
+  const sql = {
+    sql: `
+  SELECT l.*, b.*, p.*
+  FROM silo_location l
+  LEFT JOIN silo_batch b USING (location_id)
+  LEFT JOIN silo_product p USING (product_id)
+  WHERE l.location_id = ?
+  `,
+    values: [id | 0],
+    nestTables: true
+  }
+
+  let results = await new Promise((resolve, reject) => {
+    connection.query(sql, (error, results, fields) => {
+      if (error) reject(error)
+      else resolve(results)
+    })
+  })
+
+  let location = null
+  for (let result of results) {
+    if (!location) {
+      location = new Location(result.l)
+    }
+    if (result.b.batch_id && result.b.quantity !== 0) {
+      location.batches.add(new Batch(result.p.sku, result.b.quantity))
+    }
+  }
+
+  return location
+}
 
 /**
  * load a given Location into the inventory instance
@@ -25,73 +97,6 @@ const loadLocationCode = async (connection, code) => {
   })
 
   return id
-}
-
-/**
- *
- * @param {*} connection
- * @param {*} id
- * @returns {Location}
- */
-const loadLocation = async (connection, id) => {
-  const sql = {
-    sql: `
-  SELECT l.*, b.*, p.*
-  FROM silo_location l
-  LEFT JOIN silo_batch b USING (location_id)
-  LEFT JOIN silo_product p USING (product_id)
-  WHERE l.location_id = ?
-  `,
-    values: [id],
-    nestTables: true
-  }
-
-  let results = await new Promise((resolve, reject) => {
-    connection.query(sql, (error, results, fields) => {
-      if (error) reject(error)
-      else resolve(results)
-    })
-  })
-
-  let location = null
-  for (let result of results) {
-    if (!location) {
-      location = new Location(result.l)
-    }
-    if (result.b.batch_id && result.b.quantity !== 0) {
-      location.batches.add(new Batch(result.p.sku, result.b.quantity))
-    }
-  }
-
-  return location
-}
-
-/**
- * list all childs of a given location
- * @param {array} codes
- */
-const loadChildOf = async (pipeQuery, code) => {
-  if (code.length < 1) { throw new Error('please search a bunch') }
-  const sql = {
-    sql: `
-  SELECT loc.code
-  FROM silo_location parent
-  LEFT JOIN silo_location loc ON parent.location_id = loc.parent
-  WHERE parent.code IN (?)
-  `,
-    values: [code]
-  }
-
-  const childs = []
-
-  const treeWriter = (chunk, encoding, next) => {
-    childs.push(chunk.code)
-    next()
-  }
-
-  await pipeQuery(sql, treeWriter)
-
-  return childs.filter(a => !!a)
 }
 
 /**
@@ -145,25 +150,32 @@ const loadOperationsUntil = async (connection, until) => {
 /**
  * @returns {Inventory} loaded subtree
  */
-const loadSubtree = () => {
+const loadSubtree = async (connection, id) => {
+  let inv = new Inventory()
   // First find all nodes in the subtree of interest
-  // let allCodes = []
-  // let codes = [startLocationCode]
-  // do {
-  //   allCodes = allCodes.concat(codes)
-  //   codes = await loadChildOf(pipeQuery, codes)
-  //   log('found ' + codes.length)
-  // } while (codes.length > 0) // explore as long as
+  let allIds = []
+  let ids = [id]
+  do {
+    allIds = allIds.concat(ids)
+    ids = await loadChildOf(connection, ids)
+  } while (ids.length > 0) // explore as long as
 
-  // // Then for each nodem fetch its content
-  // for (let code of allCodes) {
-  //   await loadLocation(pipeQuery, inv, code)
-  // }
+  // Then for each node fetch its content
+  for (let lid of allIds) {
+    let location = await loadLocation(connection, lid)
+    if (lid === id) {
+      location.parent = null
+    }
+    inv.add(location)
+  }
+
+  return inv
 }
 
 module.exports = {
-  loadLocation,
   loadChildOf,
+  loadLocation,
   loadLocationCode,
-  loadOperationsUntil
+  loadOperationsUntil,
+  loadSubtree
 }

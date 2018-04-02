@@ -84,17 +84,18 @@ module.exports = class Inventory {
   }
 
   toCsv () {
+    let str = []
     for (let location of this.locations.values()) {
       for (let [product, quantity] of location.batches) {
         if (quantity !== 0 && quantity !== null) {
-          let dataStr = [
+          str.push([
             location.code,
             product,
             quantity
-          ].join(',')
-          console.log(dataStr)
+          ])
         }
       }
     }
+    return str.join('\n')
   }
 }
