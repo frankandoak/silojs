@@ -26,10 +26,10 @@ module.exports = class Rewinder {
         if (this.excludeTypes.includes(op.type)) {
           throw new Error(`St:${this.stack} Operation:${op.operation_id} cannot be skipped for type ${op.type}`)
         }
-        await this._moveLocation(inv, op, operationSetCopy)
+        await this._moveLocation(inv, op.opposite(), operationSetCopy)
       } else {
         if (!this.excludeTypes.includes(op.type)) {
-          this._moveBatch(inv, op)
+          this._moveBatch(inv, op.opposite())
         } else {
           l(`St:${this.stack} Operation:${op.operation_id} skip because of type ${op.type}`)
         }

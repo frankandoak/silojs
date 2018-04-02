@@ -94,6 +94,7 @@ class Operation extends Entity {
     let params = Object.assign({}, this._params)
     params.source = this._params.target
     params.target = this._params.source
+    params.batches = this.batches
     return new Operation(params)
   }
 }
