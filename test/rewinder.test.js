@@ -8,7 +8,7 @@ const location = (id, code, parent, batches) => {
   if (batches) params.batches = new BatchSet(batches)
   return new Location(params)
 }
-let operationId = 20
+let operationId = 30
 const operation = (from, to, what) => {
   // operationId-- cause we fetch them reverse chronologically
   let params = {operation_id: operationId--, source: from, target: to, location: null}
@@ -66,6 +66,17 @@ test('can move a Location', () => {
   expect(inv.keys()).toContain(1)
   expect(inv.keys()).toContain(2)
   expect(inv.tree.from(3)).toContain(2)
+})
+
+test('can remove a Location along with its subtree', () => {
+  let inv = dut.rewind(1, new Set([
+    operation(1, 3, 2),
+    operation(1, null, 3) // remove 3 forever
+  ]))
+
+  expect(inv.keys()).toContain(1)
+  expect(inv.keys()).not.toContain(2)
+  expect(inv.keys()).not.toContain(3)
 })
 
 test('can remove a Batch', () => {

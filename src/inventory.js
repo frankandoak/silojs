@@ -56,13 +56,31 @@ module.exports = class Inventory {
 
   weld (inv, root, target) {
     for (let [k, v] of inv.locations) {
-      // todo collision detection
+      if (this.locations.has(k)) {
+        throw new Error(`${k} location already exists in the target inventory`)
+      }
       this.locations.set(k, v)
     }
     for (let [k, v] of inv.tree) {
+      if (this.tree.has(k)) {
+        throw new Error(`${k} edgeMap already exists in the target inventory`)
+      }
       this.tree.set(k, v)
     }
     this.tree.link(target, root)
+  }
+
+  deleteSubtree (sourceId, whatId) {
+    this.tree.unlink(sourceId, whatId)
+    this.locations.delete(whatId)
+    let idToRemove = []
+    this.tree.bfsMap(id => {
+      idToRemove.push(id)
+    }, whatId)
+    idToRemove.forEach(id => {
+      this.locations.delete(id)
+      this.tree.delete(id)
+    })
   }
 
   toCsv () {

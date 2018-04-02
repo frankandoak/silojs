@@ -55,9 +55,8 @@ module.exports = class Rewinder {
           tree.link(targetId, whatId)
           l(`${id} moves ${whatId}`)
         } else {
-          // move and delete
-          tree.unlink(sourceId, whatId)
-          locs.delete(whatId)
+          // delete
+          inv.deleteSubtree(sourceId, whatId)
           l(`${id} deletes ${whatId}`)
         }
       } else {
