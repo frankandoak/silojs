@@ -25,6 +25,9 @@ const cli = meow(`
     notype: {
       type: 'string'
     },
+    noop: {
+      type: 'string'
+    },
     dsn: {
       type: 'string',
       default: 'mysql://root@127.0.0.1:3306/projectx'
