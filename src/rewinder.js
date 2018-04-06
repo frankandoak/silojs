@@ -4,9 +4,10 @@ module.exports = class Rewinder {
   /**
    * @param {async} subtreeLoader
    */
-  constructor (subtreeLoader, excludeTypes = []) {
+  constructor (subtreeLoader, excludeTypes = [], excludeOps = []) {
     this.subtreeLoader = subtreeLoader
     this.excludeTypes = excludeTypes
+    this.excludeOps = excludeOps
     this.stack = 0
   }
 
@@ -20,18 +21,22 @@ module.exports = class Rewinder {
     this.stack = id
     l(`St:${this.stack} with ${operationSet.size} Ops`)
     let inv = await this.subtreeLoader(id)
-
     for (let op of operationSet) {
       if (op.location) {
         if (this.excludeTypes.includes(op.type)) {
           throw new Error(`St:${this.stack} Operation:${op.operation_id} cannot be skipped for type ${op.type}`)
         }
+        if (this.excludeOps.includes(op.operation_id)) {
+          throw new Error(`St:${this.stack} Operation:${op.operation_id} cannot be skipped`)
+        }
         await this._moveLocation(inv, op.opposite(), operationSetCopy)
       } else {
-        if (!this.excludeTypes.includes(op.type)) {
-          this._moveBatch(inv, op.opposite())
-        } else {
+        if (this.excludeTypes.includes(op.type)) {
           l(`St:${this.stack} Operation:${op.operation_id} skip because of type ${op.type}`)
+        } else if(this.excludeOps.includes(op.operation_id)) {
+          l(`St:${this.stack} Operation:${op.operation_id} skip`)
+        } else {
+          this._moveBatch(inv, op.opposite())
         }
       }
     }

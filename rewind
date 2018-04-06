@@ -12,6 +12,7 @@ const cli = meow(`
     Options
       --dsn          Database Source Name
       --notype       Comma separated list of Operation types to exclude
+      --noop         Comma separated list of Operation ids to exclude
 
     Examples
       $ ./rewind TOST 248628
@@ -50,14 +51,19 @@ let main = async () => {
   console.log(`Loaded ${operations.size} operations`)
 
   // Create a Rewinder
-  let exclude = []
+  let notype = []
   if (cli.flags.notype) {
-    exclude = cli.flags.notype.split(',')
+    notype = cli.flags.notype.split(',')
+  }
+  let noop = []
+  if (cli.flags.noop) {
+    noop = cli.flags.noop.split(',')
   }
 
   const rewinder = new Rewinder(
     Loaders.loadSubtree.bind(Loaders, connection),
-    exclude
+    notype,
+    noop
   )
   const inv = await rewinder.rewind(startId, operations)
 
