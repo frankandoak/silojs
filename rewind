@@ -60,7 +60,7 @@ let main = async () => {
   }
   let noop = []
   if (cli.flags.noop) {
-    noop = cli.flags.noop.split(',')
+    noop = cli.flags.noop.split(',').map(a => parseInt(a))
   }
 
   const rewinder = new Rewinder(
